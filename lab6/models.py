@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    Table,
     Column,
     Integer,
     ForeignKey,
@@ -11,6 +12,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 import sys
+
 sys.path.append(r"C:\Users\Kcюша\pcode\pp_project\lab6")
 
 engine = create_engine('mysql://root:mySQL.kt.1502@localhost:3306/lab6_database')
@@ -68,14 +70,10 @@ class Category(BaseModel):
 
 
 
-class OrdersMedicine(BaseModel):
-    __tablename__ = 'orders_medicine'
-
-    order_id = Column(Integer, ForeignKey('order.oid'))
-    medicine_id = Column(Integer, ForeignKey('medicine.mid'))
-
-    order = relationship("Order")
-    medicine = relationship("Medicine")
+OrdersMedicine = Table('orders_medicine', BaseModel.metadata,
+                       Column('order_id', ForeignKey('order.oid'), primary_key=True),
+                       Column('medicine_id', ForeignKey('medicine.mid'), primary_key=True)
+                       )
 
 
 class Medicine(BaseModel):
@@ -87,6 +85,7 @@ class Medicine(BaseModel):
     manufacturer = Column(String(30))
     status = Column(String(30))
     demand = Column(Boolean)
+    order = relationship("Order", secondary=OrdersMedicine, back_populates="medicine")
 
     def __str__(self):
         return f"Medicine id: {self.mid}\n" \
@@ -107,7 +106,7 @@ class Order(BaseModel):
     shipDate = Column(DateTime(6))
     status = Column(String(30))
     complete = Column(Boolean)
-    medicine = relationship("Medicine", secondary=OrdersMedicine)
+    medicine = relationship("Medicine", secondary=OrdersMedicine, back_populates="order")
 
     def __str__(self):
         return f"Order id: {self.oid}\n" \
@@ -115,4 +114,4 @@ class Order(BaseModel):
                f"Quantity: {self.quantity}\n" \
                f"Ship date: {self.shipDate}\n" \
                f"Status: {self.status}\n" \
-               f"Complete: {self.complete}\n" \
+               f"Complete: {self.complete}\n"
